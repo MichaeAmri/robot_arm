@@ -5,12 +5,19 @@ class robot_arm:
 
     def __init__(self):
 
+        '''
+        see the dimensions of the links and the location
+        of the coordinate systems in the file Schematics.pdf
+        '''
+
+        # dimentions
         self.h1 = 50
         self.l34 = 300
         self.l56 = 200
         self.l1 = 40
         self.h2 = 150
 
+        # Denavit-Hartenberg parameters
         self.t_twist = np.array([0,         pi/2,       0,      0,          0,      pi/2])
         self.s_shift = np.array([self.h1,   0,          0,      self.l34,   0,      self.l56])
         self.a_shift = np.array([self.l1,   self.h2,    0,      0,          0,      0])
@@ -18,12 +25,11 @@ class robot_arm:
 
         self.generalized_coordinate_vector = np.array([0, 0, 0, 0, 0, 0])
 
-
     def transition_matrix(self, start_system=0, target_system=6):
         
-        """
+        '''
         transition matrix from coordinate starting coordinate system to target system
-        """
+        '''
 
         self.t_twist = self.t_twist + self.generalized_coordinate_vector
 
@@ -43,12 +49,21 @@ class robot_arm:
         return T
 
     def get_end_effector_coordinates(self):
-        return self.transition_matrix().dot(np.array([0, 0, 0, 1]))[:3].round(2)
+        return self.transition_matrix().dot(np.array([0, 0, 0, 1]))[:3]
+
+    def get_end_effector_angles(self):
+        return self.transition_matrix().diagonal()[:3]
+
+    def get_n_link_coordinates(self, n):
+        return self.transition_matrix(target_system=n).dot(np.array([0, 0, 0, 1]))[:3]
+
 
 if __name__ == '__main__':
 
-    arm = robot_arm()
-    test_vector = np.array([0, 0, 0, 1])
+    import visualization as vis
 
-    print (arm.get_end_effector_coordinates())
+    arm = robot_arm()
+    print (arm.get_end_effector_coordinates().round(2))
+    print (arm.get_end_effector_angles().round(2))
+    vis.draw_robot(arm)
 
