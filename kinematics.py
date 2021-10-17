@@ -1,45 +1,54 @@
 import numpy as np
 from math import sin, cos, pi
 
-def transition_matrix(generalized_coordinate_vector, start_system=0, target_system=6):
-    
-    """
-    transition matrix from coordinate starting coordinate system to target system
-    """
+class robot_arm:
 
-    #sizes
-    h1 = 50
-    l34 = 300
-    l56 = 200
-    l1 = 40
-    h2 = 150
+    def __init__(self):
 
-    # Denavit–Hartenberg parameters
-    t_twist = np.array([0,     pi/2,   0,      0,      0,      pi/2])
-    s_shift = np.array([h1,    0,      0,      l34,    0,      l56])
-    a_shift = np.array([l1,    h2,     0,      0,      0,      0])
-    a_twist = np.array([pi/2,  0,      pi/2,   -pi/2,  pi/2,   0])
+        self.h1 = 50
+        self.l34 = 300
+        self.l56 = 200
+        self.l1 = 40
+        self.h2 = 150
 
-    t_twist = t_twist + generalized_coordinate_vector
+        self.t_twist = np.array([0,         pi/2,       0,      0,          0,      pi/2])
+        self.s_shift = np.array([self.h1,   0,          0,      self.l34,   0,      self.l56])
+        self.a_shift = np.array([self.l1,   self.h2,    0,      0,          0,      0])
+        self.a_twist = np.array([pi/2,      0,          pi/2,   -pi/2,      pi/2,   0])
 
-    T = np.eye(4)
+        self.generalized_coordinate_vector = np.array([0, 0, 0, 0, 0, 0])
 
-    for i in range(start_system, target_system):
 
-        A = np.array([
-            [cos(t_twist[i]),   -sin(t_twist[i]) * cos(a_twist[i]), sin(t_twist[i]) * sin(a_twist[i]),  a_shift[i] * cos(t_twist[i])],
-            [sin(t_twist[i]),   cos(t_twist[i]) * cos(a_twist[i]),  -cos(t_twist[i]) * sin(a_twist[i]), a_shift[i] * sin(t_twist[i])],
-            [0,                 sin(a_twist[i]),                    cos(a_twist[i]),                    s_shift[i]],
-            [0,                 0,                                  0,                                  1]
-        ])
+    def transition_matrix(self, start_system=0, target_system=6):
+        
+        """
+        transition matrix from coordinate starting coordinate system to target system
+        """
 
-        T = T.dot(A)
+        self.t_twist = self.t_twist + self.generalized_coordinate_vector
 
-    return T
+        T = np.eye(4)
 
-generalized_coordinate_vector = np.array([0, 0, 0, 0, 0, 0])
+        for i in range(start_system, target_system):
+
+            A = np.array([
+                [cos(self.t_twist[i]),  -sin(self.t_twist[i]) * cos(self.a_twist[i]),   sin(self.t_twist[i]) * sin(self.a_twist[i]),    self.a_shift[i] * cos(self.t_twist[i])],
+                [sin(self.t_twist[i]),  cos(self.t_twist[i]) * cos(self.a_twist[i]),    -cos(self.t_twist[i]) * sin(self.a_twist[i]),   self.a_shift[i] * sin(self.t_twist[i])],
+                [0,                     sin(self.a_twist[i]),                           cos(self.a_twist[i]),                           self.s_shift[i]],
+                [0,                     0,                                              0,                                              1]
+            ])
+
+            T = T.dot(A)
+
+        return T
+
+    def get_end_effector_coordinates(self):
+        return self.transition_matrix().dot(np.array([0, 0, 0, 1]))[:3].round(2)
 
 if __name__ == '__main__':
 
-    test_vector = np.array ([0, 0, 0, 0])
-    print(transition_matrix(generalized_coordinate_vector).round(2))
+    arm = robot_arm()
+    test_vector = np.array([0, 0, 0, 1])
+
+    print (arm.get_end_effector_coordinates())
+
