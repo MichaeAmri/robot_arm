@@ -25,6 +25,15 @@ class robot_arm:
         self.a_shift = np.array([self.l1,   self.h2,    0,      0,          0,      0])
         self.a_twist = np.array([pi/2,      0,          pi/2,   -pi/2,      pi/2,   0])
 
+    def inverse_kinematics(self):
+
+        T = self.transition_matrix()
+        q = self.generalized_coordinate_vector
+        print(T)
+
+
+        pass
+
     def transition_matrix(self, start_system=0, target_system=6):
         
         '''
@@ -68,6 +77,6 @@ if __name__ == '__main__':
     arm = robot_arm()
     # print (arm.get_end_effector_coordinates().round(2))
     # print (arm.get_end_effector_angles().round(2))
-    
+    arm.inverse_kinematics()
     draw_robot(arm)
 
