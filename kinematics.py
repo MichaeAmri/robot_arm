@@ -10,14 +10,14 @@ class robot_arm:
         of the coordinate systems in the file Schematics.pdf
         '''
 
-        self.generalized_coordinate_vector = np.array([0, 0, 4*pi/6, 0, -pi/4, 0])
+        self.generalized_coordinate_vector = np.array([0, 0, 0, 0, 0, 0])
 
         # dimentions
-        self.h1 = 20
-        self.l34 = 170
-        self.l56 = 180
-        self.l1 = 60
-        self.h2 = 105
+        self.h1 = 25
+        self.l34 = 75
+        self.l56 = 50
+        self.l1 = 50
+        self.h2 = 100
 
         # Denavit-Hartenberg parameters
         self.t_twist = np.array([0,         pi/2,       0,      0,          0,      pi/2])
@@ -25,16 +25,51 @@ class robot_arm:
         self.a_shift = np.array([self.l1,   self.h2,    0,      0,          0,      0])
         self.a_twist = np.array([pi/2,      0,          pi/2,   -pi/2,      pi/2,   0])
 
-    def inverse_kinematics(self):
+        self.number_of_joints = len(self.t_twist)
+
+    def derivative_matrix(self, number_of_joint):
+
+        U = np.eye(4)
+
+        omega = np.array([
+            [0, -1, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+            ])
+
+        q_twist = self.t_twist + self.generalized_coordinate_vector
+
+        for i in range(self.number_of_joints):
+
+            A = np.array([
+                [cos(q_twist[i]),  -sin(q_twist[i]) * cos(self.a_twist[i]),   sin(q_twist[i]) * sin(self.a_twist[i]),    self.a_shift[i] * cos(q_twist[i])],
+                [sin(q_twist[i]),  cos(q_twist[i]) * cos(self.a_twist[i]),    -cos(q_twist[i]) * sin(self.a_twist[i]),   self.a_shift[i] * sin(q_twist[i])],
+                [0,                     sin(self.a_twist[i]),                           cos(self.a_twist[i]),                           self.s_shift[i]],
+                [0,                     0,                                              0,                                              1]
+            ])
+
+            if i == number_of_joint:
+                T = T.dot(omega)
+
+            T = T.dot(A)
+
+        return T
+
+    def inverse_kinematics(self, target_x=175, target_y=0, target_z=125, target_cos_yx=0, target_cos_zx=1, target_cos_zy=0):
+
+        current_x, current_y, current_z = self.get_end_effector_coordinates()
 
         T = self.transition_matrix()
         q = self.generalized_coordinate_vector
-        print(T)
 
 
         pass
 
     def transition_matrix(self, start_system=0, target_system=6):
+
+        if target_system > self.number_of_joints:
+            target_system = self.number_of_joints
         
         '''
         transition matrix from coordinate starting coordinate system to target system
