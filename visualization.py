@@ -14,6 +14,7 @@ def draw_robot(arm):
 
     for i in range(1, arm.number_of_joints):
         data = np.vstack((data, arm.get_n_link_coordinates(i).round(2)))
+    data = np.vstack((data, arm.get_end_effector_coordinates().round(2)))
     
     plt.plot(data[:,0], data[:,1], data[:,2], '--ko')
     plt.show()
