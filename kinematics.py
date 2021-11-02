@@ -57,7 +57,7 @@ class robot_arm:
 
         return U
 
-    def inverse_kinematics(self, target_x=175, target_y=0, target_z=100, target_cos_yx=0, target_cos_zx=1, target_cos_zy=0):
+    def inverse_kinematics(self, x=175, y=0, z=125, cos_yx=0, cos_zx=1, cos_zy=0):
 
         U = np.zeros((self.number_of_joints, 4, 4))
         count = 0
@@ -78,7 +78,7 @@ class robot_arm:
             ])
 
             solve = np.array([
-                [target_cos_yx - self.transition_matrix()[0, 1] +
+                [cos_yx - self.transition_matrix()[0, 1] +
                 U[0, 0, 1] * self.generalized_coordinate_vector[0] +
                 U[1, 0, 1] * self.generalized_coordinate_vector[1] +
                 U[2, 0, 1] * self.generalized_coordinate_vector[2] +
@@ -86,7 +86,7 @@ class robot_arm:
                 U[4, 0, 1] * self.generalized_coordinate_vector[4] +
                 U[5, 0, 1] * self.generalized_coordinate_vector[5]],
 
-                [target_cos_zx - self.transition_matrix()[0, 2] +
+                [cos_zx - self.transition_matrix()[0, 2] +
                 U[0, 0, 2] * self.generalized_coordinate_vector[0] +
                 U[1, 0, 2] * self.generalized_coordinate_vector[1] +
                 U[2, 0, 2] * self.generalized_coordinate_vector[2] +
@@ -94,7 +94,7 @@ class robot_arm:
                 U[4, 0, 2] * self.generalized_coordinate_vector[4] +
                 U[5, 0, 2] * self.generalized_coordinate_vector[5]],
 
-                [target_x - self.transition_matrix()[0, 3] +
+                [x - self.transition_matrix()[0, 3] +
                 U[0, 0, 3] * self.generalized_coordinate_vector[0] +
                 U[1, 0, 3] * self.generalized_coordinate_vector[1] +
                 U[2, 0, 3] * self.generalized_coordinate_vector[2] +
@@ -102,7 +102,7 @@ class robot_arm:
                 U[4, 0, 3] * self.generalized_coordinate_vector[4] +
                 U[5, 0, 3] * self.generalized_coordinate_vector[5]],
 
-                [target_cos_zy - self.transition_matrix()[1, 2] +
+                [cos_zy - self.transition_matrix()[1, 2] +
                 U[0, 1, 2] * self.generalized_coordinate_vector[0] +
                 U[1, 1, 2] * self.generalized_coordinate_vector[1] +
                 U[2, 1, 2] * self.generalized_coordinate_vector[2] +
@@ -110,7 +110,7 @@ class robot_arm:
                 U[4, 1, 2] * self.generalized_coordinate_vector[4] +
                 U[5, 1, 2] * self.generalized_coordinate_vector[5]],
 
-                [target_y - self.transition_matrix()[1, 3] +
+                [y - self.transition_matrix()[1, 3] +
                 U[0, 1, 3] * self.generalized_coordinate_vector[0] +
                 U[1, 1, 3] * self.generalized_coordinate_vector[1] +
                 U[2, 1, 3] * self.generalized_coordinate_vector[2] +
@@ -118,7 +118,7 @@ class robot_arm:
                 U[4, 1, 3] * self.generalized_coordinate_vector[4] +
                 U[5, 1, 3] * self.generalized_coordinate_vector[5]],
 
-                [target_z - self.transition_matrix()[2, 3] +
+                [z - self.transition_matrix()[2, 3] +
                 U[0, 2, 3] * self.generalized_coordinate_vector[0] +
                 U[1, 2, 3] * self.generalized_coordinate_vector[1] +
                 U[2, 2, 3] * self.generalized_coordinate_vector[2] +
@@ -127,10 +127,10 @@ class robot_arm:
                 U[5, 2, 3] * self.generalized_coordinate_vector[5]]
             ])
 
-            #result = np.linalg.solve(syst, solve).reshape(6)
-            # if np.sum(self.generalized_coordinate_vector - result) ** 2 < eps:
-            #     self.generalized_coordinate_vector = result
-            #     break
+            result = np.linalg.solve(syst, solve).reshape(6)
+            if np.sum(self.generalized_coordinate_vector - result) ** 2 < eps:
+                self.generalized_coordinate_vector = result
+                break
 
             self.generalized_coordinate_vector = np.linalg.solve(syst, solve).reshape(self.number_of_joints)
 
@@ -185,9 +185,10 @@ if __name__ == '__main__':
 
     arm = robot_arm()
     
-    arm.inverse_kinematics()
+    arm.inverse_kinematics(x=150, y=0, z=100)
 
-    print (arm.get_end_effector_coordinates().round(2))
+    print(arm.get_end_effector_coordinates().round(2))
+    print(arm.generalized_coordinate_vector)
     
     draw_robot(arm)
 
