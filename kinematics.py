@@ -10,7 +10,8 @@ class robot_arm:
         of the coordinate systems in the file Schematics.pdf
         '''
 
-        self.generalized_coordinate_vector = np.array([0, 0, 0, 0, 0, 0])
+        # vector must not contain zero values
+        self.generalized_coordinate_vector = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 
         # dimentions
         self.h1 = 25
@@ -27,18 +28,11 @@ class robot_arm:
 
         self.number_of_joints = len(self.t_twist)
 
-    def derivative_matrix(self, actuated_joint_number, linear=False):
+    def derivative_matrix(self, actuated_joint_number):
 
         U = np.eye(4)
 
-        omega_linear = np.array([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, -1],
-            [0, 0, 0, 0]
-            ])
-
-        omega_rotation = np.array([
+        omega = np.array([
             [0, -1, 0, 0],
             [1, 0, 0, 0],
             [0, 0, 0, 0],
@@ -57,16 +51,13 @@ class robot_arm:
             ])
 
             if i == actuated_joint_number:
-                if linear:
-                    A = omega_linear.dot(A)
-                else:
-                    A = omega_rotation.dot(A)
+                A = omega.dot(A)
 
             U = U.dot(A)
 
         return U
 
-    def inverse_kinematics(self, target_x=160, target_y=0, target_z=120, target_cos_yx=0, target_cos_zx=1, target_cos_zy=0):
+    def inverse_kinematics(self, target_x=175, target_y=0, target_z=100, target_cos_yx=0, target_cos_zx=1, target_cos_zy=0):
 
         U = np.zeros((self.number_of_joints, 4, 4))
         count = 0
@@ -136,20 +127,14 @@ class robot_arm:
                 U[5, 2, 3] * self.generalized_coordinate_vector[5]]
             ])
 
-            result = np.linalg.solve(syst, solve).reshape(6)
+            #result = np.linalg.solve(syst, solve).reshape(6)
             # if np.sum(self.generalized_coordinate_vector - result) ** 2 < eps:
             #     self.generalized_coordinate_vector = result
             #     break
 
-            self.generalized_coordinate_vector = result
-
-            print('\nq: ', self.generalized_coordinate_vector)
-            print('EF coords: ', self.get_end_effector_coordinates())
-            print(np.linalg.solve(syst, solve).reshape(6))
+            self.generalized_coordinate_vector = np.linalg.solve(syst, solve).reshape(self.number_of_joints)
 
             count += 1
-
-        pass
 
     def transition_matrix(self, start_system=0, target_system=6):
 
@@ -190,7 +175,6 @@ class robot_arm:
             self.transition_matrix()[1, 2]
         ])
 
-
     def get_n_link_coordinates(self, n):
         return self.transition_matrix(target_system=n).dot(np.array([0, 0, 0, 1]))[:3]
 
@@ -200,14 +184,10 @@ if __name__ == '__main__':
     from visualization import draw_robot
 
     arm = robot_arm()
-
-    print (arm.get_end_effector_coordinates().round(2))
-    print (arm.get_end_effector_angles().round(2))
     
     arm.inverse_kinematics()
 
     print (arm.get_end_effector_coordinates().round(2))
-    print (arm.get_end_effector_angles().round(2))
     
     draw_robot(arm)
 
